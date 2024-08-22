@@ -1,0 +1,51 @@
+---
+title: "Home Credit Default Risk"
+subtitle: "Part 1 | Exploratory Data Analysis"
+format: html
+editor:
+    render-on-save: true
+---
+
+# Introduction
+
+
+
+# Analysis Preparation
+
+```{python}
+
+import pandas as pd
+
+```
+
+```{python}
+
+uj_roster = pd.DataFrame({
+    "name": ["Lauri Markkanen", "Collin Sexton", "Keyonte George"], 
+    "height_in": [85, 73, 75]
+})
+
+ojs_define(data = uj_roster)
+```
+
+
+```{python}
+def greet(name):
+    print(f'Hello {name}')
+
+greet("Adam")
+
+```
+
+
+```{ojs}
+
+// A quick plot
+
+Plot.plot({
+    marks: [
+        Plot.barY(transpose(data), {x: "name", y: "height_in"})
+    ]
+})
+
+```
