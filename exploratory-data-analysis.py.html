@@ -107,46 +107,92 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="analysis-preparation" class="level1">
 <h1>Analysis Preparation</h1>
-<div id="c78aaa7e" class="cell" data-execution_count="1">
+<div id="e2104910" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> duckdb</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> polars <span class="im">as</span> pl</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="8efb1728" class="cell" data-execution_count="2">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># DuckDB relations</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="92fbc4b6" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># DuckDB relations</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># These are tables against which we can query using the DuckDB API</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/application_test.csv"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/application_train.csv"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/bureau_balance.csv"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/bureau.csv"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/credit_card_balance.csv"</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/installments_payments.csv"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/POS_CASH_balance.csv"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>duckdb.read_csv(<span class="st">"data/previous_application.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="c52640a8" class="cell" data-execution_count="3">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>uj_roster <span class="op">=</span> pd.DataFrame({</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"name"</span>: [<span class="st">"Lauri Markkanen"</span>, <span class="st">"Collin Sexton"</span>, <span class="st">"Keyonte George"</span>], </span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"height_in"</span>: [<span class="dv">85</span>, <span class="dv">73</span>, <span class="dv">75</span>]</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ojs_define(data <span class="op">=</span> uj_roster)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="78f541c4" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>duckdb.sql(<span class="st">"SELECT * FROM 'data/bureau.csv' LIMIT 10"</span>).show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>┌────────────┬──────────────┬───────────────┬─────────────────┬─────────────┬────────────────────┬─────────────────────┬───────────────────┬────────────────────────┬────────────────────┬────────────────┬─────────────────────┬──────────────────────┬────────────────────────┬─────────────────┬────────────────────┬─────────────┐
+│ SK_ID_CURR │ SK_ID_BUREAU │ CREDIT_ACTIVE │ CREDIT_CURRENCY │ DAYS_CREDIT │ CREDIT_DAY_OVERDUE │ DAYS_CREDIT_ENDDATE │ DAYS_ENDDATE_FACT │ AMT_CREDIT_MAX_OVERDUE │ CNT_CREDIT_PROLONG │ AMT_CREDIT_SUM │ AMT_CREDIT_SUM_DEBT │ AMT_CREDIT_SUM_LIMIT │ AMT_CREDIT_SUM_OVERDUE │   CREDIT_TYPE   │ DAYS_CREDIT_UPDATE │ AMT_ANNUITY │
+│   int64    │    int64     │    varchar    │     varchar     │    int64    │       int64        │       double        │      double       │         double         │       int64        │     double     │       double        │        double        │         double         │     varchar     │       int64        │   double    │
+├────────────┼──────────────┼───────────────┼─────────────────┼─────────────┼────────────────────┼─────────────────────┼───────────────────┼────────────────────────┼────────────────────┼────────────────┼─────────────────────┼──────────────────────┼────────────────────────┼─────────────────┼────────────────────┼─────────────┤
+│     215354 │      5714462 │ Closed        │ currency 1      │        -497 │                  0 │              -153.0 │            -153.0 │                   NULL │                  0 │        91323.0 │                 0.0 │                 NULL │                    0.0 │ Consumer credit │               -131 │        NULL │
+│     215354 │      5714463 │ Active        │ currency 1      │        -208 │                  0 │              1075.0 │              NULL │                   NULL │                  0 │       225000.0 │            171342.0 │                 NULL │                    0.0 │ Credit card     │                -20 │        NULL │
+│     215354 │      5714464 │ Active        │ currency 1      │        -203 │                  0 │               528.0 │              NULL │                   NULL │                  0 │       464323.5 │                NULL │                 NULL │                    0.0 │ Consumer credit │                -16 │        NULL │
+│     215354 │      5714465 │ Active        │ currency 1      │        -203 │                  0 │                NULL │              NULL │                   NULL │                  0 │        90000.0 │                NULL │                 NULL │                    0.0 │ Credit card     │                -16 │        NULL │
+│     215354 │      5714466 │ Active        │ currency 1      │        -629 │                  0 │              1197.0 │              NULL │                77674.5 │                  0 │      2700000.0 │                NULL │                 NULL │                    0.0 │ Consumer credit │                -21 │        NULL │
+│     215354 │      5714467 │ Active        │ currency 1      │        -273 │                  0 │             27460.0 │              NULL │                    0.0 │                  0 │       180000.0 │            71017.38 │            108982.62 │                    0.0 │ Credit card     │                -31 │        NULL │
+│     215354 │      5714468 │ Active        │ currency 1      │         -43 │                  0 │                79.0 │              NULL │                    0.0 │                  0 │        42103.8 │             42103.8 │                  0.0 │                    0.0 │ Consumer credit │                -22 │        NULL │
+│     162297 │      5714469 │ Closed        │ currency 1      │       -1896 │                  0 │             -1684.0 │           -1710.0 │                14985.0 │                  0 │       76878.45 │                 0.0 │                  0.0 │                    0.0 │ Consumer credit │              -1710 │        NULL │
+│     162297 │      5714470 │ Closed        │ currency 1      │       -1146 │                  0 │              -811.0 │            -840.0 │                    0.0 │                  0 │       103007.7 │                 0.0 │                  0.0 │                    0.0 │ Consumer credit │               -840 │        NULL │
+│     162297 │      5714471 │ Active        │ currency 1      │       -1146 │                  0 │              -484.0 │              NULL │                    0.0 │                  0 │         4500.0 │                 0.0 │                  0.0 │                    0.0 │ Credit card     │               -690 │        NULL │
+├────────────┴──────────────┴───────────────┴─────────────────┴─────────────┴────────────────────┴─────────────────────┴───────────────────┴────────────────────────┴────────────────────┴────────────────┴─────────────────────┴──────────────────────┴────────────────────────┴─────────────────┴────────────────────┴─────────────┤
+│ 10 rows                                                                                                                                                                                                                                                                                                                 17 columns │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</div>
+</div>
+<div id="adb7a2a8" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>uj_roster <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"name"</span>: [<span class="st">"Lauri Markkanen"</span>, <span class="st">"Collin Sexton"</span>, <span class="st">"Keyonte George"</span>], </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"height_in"</span>: [<span class="dv">85</span>, <span class="dv">73</span>, <span class="dv">75</span>]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>ojs_define(data <span class="op">=</span> uj_roster)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <script type="ojs-define">{"contents": [{"name": "data", "value": {"name": ["Lauri Markkanen", "Collin Sexton", "Keyonte George"], "height_in": [85, 73, 75]}}]}</script>
 </div>
 </div>
-<div id="40a6b450" class="cell" data-execution_count="4">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> greet(name):</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Hello </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>greet(<span class="st">"Adam"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="881fd29b" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> greet(name):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Hello </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>greet(<span class="st">"Adam"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Hello Adam</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6" data-startfrom="51" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 50;"><span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="co">// A quick plot</span></span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>Plot<span class="op">.</span><span class="fu">plot</span>({</span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [</span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>        Plot<span class="op">.</span><span class="fu">barY</span>(<span class="fu">transpose</span>(data)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"name"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"height_in"</span>})</span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>    ]</span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8" data-startfrom="67" data-source-offset="-1"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 66;"><span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>test_data <span class="op">=</span> [</span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>    {<span class="dt">label</span><span class="op">:</span> <span class="st">"x"</span><span class="op">,</span> <span class="dt">value</span><span class="op">:</span> <span class="dv">5</span>}<span class="op">,</span>  </span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>    {<span class="dt">label</span><span class="op">:</span> <span class="st">"y"</span><span class="op">,</span> <span class="dt">value</span><span class="op">:</span> <span class="dv">15</span>}<span class="op">,</span>  </span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>    {<span class="dt">label</span><span class="op">:</span> <span class="st">"z"</span><span class="op">,</span> <span class="dt">value</span><span class="op">:</span> <span class="dv">25</span>} </span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [</span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>        Plot<span class="op">.</span><span class="fu">barY</span>(test_data<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"label"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"purple"</span>})</span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<div id="ojs-cell-1" data-nodetype="expression">
+<div>
+<div id="ojs-cell-1-1" data-nodetype="declaration">
 
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-2" data-nodetype="expression">
+
+</div>
 </div>
 </div>
 </div>
@@ -155,7 +201,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </main>
 <!-- /main column -->
 <script type="ojs-module-contents">
-eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IlxuLy8gQSBxdWljayBwbG90XG5cblBsb3QucGxvdCh7XG4gICAgbWFya3M6IFtcbiAgICAgICAgUGxvdC5iYXJZKHRyYW5zcG9zZShkYXRhKSwge3g6IFwibmFtZVwiLCB5OiBcImhlaWdodF9pblwifSlcbiAgICBdXG59KVxuXG4ifV19
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IlxudGVzdF9kYXRhID0gW1xuICAgIHtsYWJlbDogXCJ4XCIsIHZhbHVlOiA1fSwgIFxuICAgIHtsYWJlbDogXCJ5XCIsIHZhbHVlOiAxNX0sICBcbiAgICB7bGFiZWw6IFwielwiLCB2YWx1ZTogMjV9IFxuXVxuXG5QbG90LnBsb3Qoe1xuICAgIG1hcmtzOiBbXG4gICAgICAgIFBsb3QuYmFyWSh0ZXN0X2RhdGEsIHt4OiBcImxhYmVsXCIsIHk6IFwidmFsdWVcIiwgZmlsbDogXCJwdXJwbGVcIn0pXG4gICAgXVxufSlcblxuIn1dfQ==
 </script>
 <script type="module">
 if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }

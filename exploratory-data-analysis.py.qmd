@@ -8,8 +8,6 @@ editor:
 
 # Introduction
 
-
-
 # Analysis Preparation
 
 ```{python}
@@ -21,14 +19,31 @@ import polars as pl
 
 ```
 
-```{python}
+```{python .duck-db-relations}
+#| output: false
 
 # DuckDB relations
+# These are tables against which we can query using the DuckDB API
 
+duckdb.read_csv("data/application_test.csv")
+duckdb.read_csv("data/application_train.csv")
+duckdb.read_csv("data/bureau_balance.csv")
+duckdb.read_csv("data/bureau.csv")
+duckdb.read_csv("data/credit_card_balance.csv")
+duckdb.read_csv("data/installments_payments.csv")
+duckdb.read_csv("data/POS_CASH_balance.csv")
+duckdb.read_csv("data/previous_application.csv")
 
 ```
 
+
 ```{python}
+
+duckdb.sql("SELECT * FROM 'data/bureau.csv' LIMIT 10").show()
+
+```
+
+```{python .uj-data}
 
 uj_roster = pd.DataFrame({
     "name": ["Lauri Markkanen", "Collin Sexton", "Keyonte George"], 
@@ -38,8 +53,7 @@ uj_roster = pd.DataFrame({
 ojs_define(data = uj_roster)
 ```
 
-
-```{python}
+```{python .test-python}
 def greet(name):
     print(f'Hello {name}')
 
@@ -47,14 +61,18 @@ greet("Adam")
 
 ```
 
-
 ```{ojs}
+//| output: true
 
-// A quick plot
+test_data = [
+    {label: "x", value: 5},  
+    {label: "y", value: 15},  
+    {label: "z", value: 25} 
+]
 
 Plot.plot({
     marks: [
-        Plot.barY(transpose(data), {x: "name", y: "height_in"})
+        Plot.barY(test_data, {x: "label", y: "value", fill: "purple"})
     ]
 })
 
