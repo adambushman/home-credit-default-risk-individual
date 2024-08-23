@@ -1,23 +1,33 @@
 ---
 title: "Home Credit Default Risk"
 subtitle: "Part 1 | Exploratory Data Analysis"
-format: html
+format: 
+    html:
+        embed-resources: true
 editor:
     render-on-save: true
 ---
 
 # Introduction
 
+For this exploratory data analysis, I plan to use the following languages, APIs, and tools:
+
+*   [Quarto](https://quarto.org/): probably "the" notebook of choice for the scientific community; built and maintained by Posit, it's flexible, powerful, and beautiful.
+*   [Python](https://www.python.org/): I usually default to R for analytical tasks so I could use the extra practice in Python.
+*   [DuckDB](https://duckdb.org/): an in-process analytical database engine. It is extremely fast and features a convenient syntax. It's gathered tremendous steam in the industry, even for analysis tasks.
+*   [Observable Plot](https://observablehq.com/plot/): from the same minds that brought the revolutionary D3.js library, comes a simplified wrapper called Observable Plot. It's highly flexible without being overly verbose; Quarto offers naitive support.
+
 # Analysis Preparation
+
+We'll start off importing `duckdb`. We'll do much of data processing work using this powerful SQL engine.
 
 ```{python}
 
 import duckdb
 
-import pandas as pd
-import polars as pl
-
 ```
+
+With access to the API, we can begin to query our data located in files. We need only setup "relations" (informing `duckdb` where the files are located).
 
 ```{python .duck-db-relations}
 #| output: false
@@ -36,10 +46,21 @@ duckdb.read_csv("data/previous_application.csv")
 
 ```
 
+With a simple query, we can look at the first 10 rows of the `bureau.csv` file.
 
 ```{python}
 
 duckdb.sql("SELECT * FROM 'data/bureau.csv' LIMIT 10").show()
+
+```
+
+DuckDB does a nice job styling the output and including helpful details, such as data types.
+
+
+```{python}
+
+import pandas as pd
+import polars as pl
 
 ```
 
@@ -62,17 +83,10 @@ greet("Adam")
 ```
 
 ```{ojs}
-//| output: true
-
-test_data = [
-    {label: "x", value: 5},  
-    {label: "y", value: 15},  
-    {label: "z", value: 25} 
-]
 
 Plot.plot({
     marks: [
-        Plot.barY(test_data, {x: "label", y: "value", fill: "purple"})
+        Plot.barY(transpose(data), {x: "name", y: "height_in", fill: "#4E008E"})
     ]
 })
 
