@@ -14,7 +14,17 @@ editor:
 
 ```{python}
 
+import duckdb
+
 import pandas as pd
+import polars as pl
+
+```
+
+```{python}
+
+# DuckDB relations
+
 
 ```
 
