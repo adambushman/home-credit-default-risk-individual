@@ -1,8 +1,11 @@
 ---
 title: "Home Credit Default Risk"
-subtitle: "Part 1 | Exploratory Data Analysis"
+subtitle: "Part 1 | Exploratory Data Analysis | IS 6812"
+author: "Adam Bushman (u6049169)"
+date: "8/14/2024"
 format: 
     html:
+        toc: true
         embed-resources: true
 editor:
     render-on-save: true
