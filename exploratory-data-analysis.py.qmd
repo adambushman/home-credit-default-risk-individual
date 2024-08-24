@@ -20,6 +20,16 @@ For this exploratory data analysis, I plan to use the following languages, APIs,
 *   [DuckDB](https://duckdb.org/): an in-process analytical database engine. It is extremely fast and features a convenient syntax. It's gathered tremendous steam in the industry, even for analysis tasks.
 *   [Observable Plot](https://observablehq.com/plot/): from the same minds that brought the revolutionary D3.js library, comes a simplified wrapper called Observable Plot. It's highly flexible without being overly verbose; Quarto offers naitive support.
 
+::: {layout="[[3,4,4,7]]" layout-valign="center"}
+![](https://quarto-dev.github.io/quarto-r/logo.png)
+
+![](https://duckdb.org/images/logo-dl/DuckDB_Logo.png)
+
+![](https://quantumzeitgeist.com/wp-content/uploads/pythoned.png)
+
+![](plot-logo.png)
+::::
+
 # Analysis Preparation
 
 We'll start off importing `duckdb`. We'll do much of data processing work using this powerful SQL engine.
