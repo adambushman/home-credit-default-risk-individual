@@ -2,9 +2,10 @@
 title: "Home Credit Default Risk"
 subtitle: "Part 1 | Exploratory Data Analysis | IS 6812"
 author: "Adam Bushman (u6049169)"
-date: "8/14/2024"
+date: "9/10/2024"
 format: 
     html:
+        theme: simplex
         toc: true
         embed-resources: true
 editor:
@@ -13,26 +14,78 @@ editor:
 
 # Introduction
 
+## The Project
+
+#### Business Problem
+
+Home Credit cares deeply about the population without sufficient credit history and aims to improve inclusion for this underrepresented group by designing prediction models for loan repayment, such that capable borrowers are not denied solely due to absence of credit while protecting against defaults.
+
+#### Benefit of a Solution
+
+A more accurate prediction model will help Home Credit a) provide lending terms and b) sufficiently balance risk such that financial inclusion is expanded.
+
+#### Success Metrics
+
+The success of the project will be measured in accurately predicting loan defaults, so that an increase in loan approval rates among this underrepresented group is accompanied by a stable or even reduction in default rates.
+
+#### Analytics Approach
+
+A supervised machine learning classification approach will be used to predict loan default risk, leveraging alternative data sources such as telco and transactional information, with the target variable being loan repayment.
+
+#### Scope
+
+The project will deliver a predictive model for assessing loan repayment abilities.
+
+#### Details
+
+The project will be executed by a team of business analysts, equipped with data processing and modeling skills. The project will feature iterative milestones for data exploration, model development, and evaluation, culminating in a final model by calendar year end.
+
+
+## My Approach
+
 For this exploratory data analysis, I plan to use the following languages, APIs, and tools:
 
 *   [Quarto](https://quarto.org/): probably "the" notebook of choice for the scientific community; built and maintained by Posit, it's flexible, powerful, and beautiful.
 *   [Python](https://www.python.org/): I usually default to R for analytical tasks so I could use the extra practice in Python.
 *   [DuckDB](https://duckdb.org/): an in-process analytical database engine. It is extremely fast and features a convenient syntax. It's gathered tremendous steam in the industry, even for analysis tasks.
-*   [Observable Plot](https://observablehq.com/plot/): from the same minds that brought the revolutionary D3.js library, comes a simplified wrapper called Observable Plot. It's highly flexible without being overly verbose; Quarto offers naitive support.
 
-::: {layout="[[3,4,4,7]]" layout-valign="center"}
+::: {layout="[[3,4,4,5]]" layout-valign="center"}
 ![](https://quarto-dev.github.io/quarto-r/logo.png)
-
-![](https://duckdb.org/images/logo-dl/DuckDB_Logo.png)
 
 ![](https://quantumzeitgeist.com/wp-content/uploads/pythoned.png)
 
-![](plot-logo.png)
+![](https://duckdb.org/images/logo-dl/DuckDB_Logo.png)
+::::
+
+Within the Python ecosystem I'll use several libraries that will augment the analytical process. These include, but are not limited to:
+
+*   [pandas](https://pandas.pydata.org/docs/index.html): probably *the* foundational package for data analysis in Python
+*   [scikit-learn](https://scikit-learn.org/stable/): a comprehensive API for data science models and workflows
+*   [statsmodels](https://www.statsmodels.org/stable/index.html): one of the best statistics libraries in Python
+*   [plotnine](https://plotnine.org/): the {ggplot2} equivalent in Python, bringing "grammar of graphics"
+*   [skimpy](https://pypi.org/project/skimpy/): a neat package that started in R designed to summarize tabular data in a digestible way
+
+
+::: {layout="[[8,14,5,5]]" layout-valign="center"}
+![](https://numfocus.org/wp-content/uploads/2016/07/pandas-logo-300.png)
+
+![](https://miro.medium.com/v2/resize:fit:984/1*OTt5dpD5N4Ru1qn0WNsZ4g.png)
+
+![](https://plotnine.org/images/logo-540.png)
+
+![](https://docs.ropensci.org/skimr/logo.png)
 ::::
 
 # Analysis Preparation
 
-We'll start off importing `duckdb`. We'll do much of data processing work using this powerful SQL engine.
+## Data Source
+
+The data is sourced from [Kaggle](https://www.kaggle.com/competitions/home-credit-default-risk/overview) where [Home Credit](https://www.homecredit.net/) hosted a competitiion back in the summer of 2018. Data was downloaded therefrom on August 20th, 2024 and used concurrently throughout the Capstone course at University of Utah, Fall 2024.
+
+
+## Loading Data
+
+We'll start off importing `duckdb`. We'll do much of the data processing work using this powerful SQL engine.
 
 ```{python}
 
@@ -59,7 +112,12 @@ duckdb.read_csv("data/previous_application.csv")
 
 ```
 
-With a simple query, we can look at the first 10 rows of the `bureau.csv` file.
+This approach isn't what you'd call "conventional". How are we expecting to work with this data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
+
+
+## Working With the Data
+
+Straight away, we can interact with these files with plain SQL. For example, with a simple query (below) we can look at the first 10 rows of the `bureau.csv` file.
 
 ```{python}
 
@@ -69,38 +127,41 @@ duckdb.sql("SELECT * FROM 'data/bureau.csv' LIMIT 10").show()
 
 DuckDB does a nice job styling the output and including helpful details, such as data types.
 
+But don't think we're "stuck" in the world of SQL for the duration of this analysis; far from it. DuckDB is very adept at refactoring the data for use with the other packages we'll be using. Let's bring in `pandas` and see how this works:
 
 ```{python}
 
 import pandas as pd
-import polars as pl
 
 ```
 
-```{python .uj-data}
+```{python}
 
-uj_roster = pd.DataFrame({
-    "name": ["Lauri Markkanen", "Collin Sexton", "Keyonte George"], 
-    "height_in": [85, 73, 75]
-})
+df = duckdb.sql("SELECT * FROM 'data/bureau.csv' LIMIT 10").fetchdf()
 
-ojs_define(data = uj_roster)
-```
-
-```{python .test-python}
-def greet(name):
-    print(f'Hello {name}')
-
-greet("Adam")
+type(df)
 
 ```
 
-```{ojs}
+As you can see, we now have a `pandas` data frame. We could run a model with `scikit-learn`, generate a visualization with `plotnine`, or perform complex, custom logic ill-fit for SQL. For now, we'll just select every other column:
 
-Plot.plot({
-    marks: [
-        Plot.barY(transpose(data), {x: "name", y: "height_in", fill: "#4E008E"})
-    ]
-})
+```{python}
+
+df_sub = df.loc[:,::2]
+
+df_sub.info()
 
 ```
+
+At this point, we may be ready to leverage the speed and efficiency of DuckDB. So we can just switch right back!
+
+```{python}
+
+duckdb.sql("SELECT * FROM df_sub").show()
+
+```
+
+There really won't be any issue navigating between the different APIs. In fact, we'll be able to leverage the unique strengths of each of them to best advance our analysis. 
+
+
+# Exploration
