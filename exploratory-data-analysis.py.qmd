@@ -5,6 +5,7 @@ author: "Adam Bushman (u6049169)"
 date: "9/10/2024"
 format: 
     html:
+        css: styles.css
         theme: simplex
         toc: true
         embed-resources: true
@@ -110,6 +111,8 @@ duckdb.read_csv("data/installments_payments.csv")
 duckdb.read_csv("data/POS_CASH_balance.csv")
 duckdb.read_csv("data/previous_application.csv")
 
+duckdb.read_csv("data/HomeCredit_columns_description.csv")
+
 ```
 
 This approach isn't what you'd call "conventional". How are we expecting to work with this data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
@@ -165,3 +168,106 @@ There really won't be any issue navigating between the different APIs. In fact, 
 
 
 # Exploration
+
+## Skim each dataset
+
+We'll start off by getting familiar with each of the data sets. We'll use the `{skimpy}` package for this and do some visualizations.
+
+### `application_train.csv`
+
+This file is the same as `application_test.csv` except that it features the target variable. We'll start with the columns:
+
+```{python}
+
+duckdb.sql("""
+    SELECT *
+    FROM 'data/HomeCredit_columns_description.csv'
+""")
+
+```
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+app_train_df = (
+    duckdb                                                 # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/application_train.csv'")     # Read the file
+    .fetchdf()                                             # Convert to a pandas dataframe
+)
+
+skim(app_train_df)                                         # "Skim" the data set
+
+```
+
+This is a LARGE data set. Let's break down some of the observations we can glean from the summary:
+
+#### Data Types
+
+*   There's several variables casted as numeric that should be categorical
+    *   Any variables with `FLAG_` prefixes: ~32 columns
+        *   Examples: `FLAG_MOBIL`, `FLAG_DOCUMENT_#`, ...
+    *   Other variables treated as flags but not specified in the name: ~6 columns
+        *   Examples: `REG_REGION_NOT_LIVE_REGION`, `LIVE_CITY_NOT_WORK_CITY`, ...
+    *   `REGION_RATING_` variables that are ordinal classificaitons
+*   Many variables of type `string` could be candidates for categorical depending on count of unique values
+    *   Examples: `NAME_CONTRACT_TYPE`, `ORGANIZATION_TYPE`
+*   Some variables casted as `string` but may need to be numeric
+    *   Any with `_MODE` suffix
+
+#### Missing Data
+
+*   `EXT_SOURCE_#` these are scores ingested from third parties
+    *   Understandably sparse; not every client would be represented in third-party systems
+*   Fields including `APARTMENT_`, `BASEMENT_`, `ELEVATOR_`, etc., all relate to the client's current dwelling.
+    *   43 of the file's 122 columns relate to the client's dwelling
+    *   These are very sparse, about ~50% complete. These fields represent most of the missing data
+    *   Presumably, the lender was unable to collect such detail for every client
+*   `OBS_##_SOCIAL_CIRCLE` and `DEF_##_SOCIAL_CIRCLE` relate to default rates on observation ## days past due
+    *   This is a count that's heavily skewed to the right
+    *   <1% of observations have these fields as missing
+*   `AMT_REQ_CREDIT_BUREAU_XX` are fields measure the number of credit inqueries in XX timeframe
+    *   This data set is geared around users without sufficient credit history so makes sense this is missing
+    *   ~13% of the data is missing
+*   `OCCUPATION_TYPE` refers to the type of job the user has
+    *   Missing for virtually 1/3 clients
+    *   `ORGANIZATION_TYPE`, however, is not missing so we do retain some attribute relative to their work
+    *   Perhaps in combination with `NAME_EDUCATION_TYPE` there's predictive power
+
+#### Distribution
+
+*   All dwelling related variables have been *normalized* based on description column descriptions file
+    *   Checking the histograms to the far right, this appears to be accurate
+*   There's a couple variables with skewed distributions
+    *   `DAYS_REGISTRATION`: skewed right
+    *   `DAYS_LAST_PHONE_CHANGE`: skewed right
+
+#### Potential feature engineering
+
+*   Dimensionality reduction
+    *   `FLAG_DOCUMENT_#` fields could potentially be summarized a few ways;
+        *   % of documents completed
+        *   Finding principal components
+        *   Maybe only certain documents matter
+    *   There's many measures of central tendency for dwelling (avg, mode, median)
+        *   Likely not all for each perspective is needed
+
+### `bureau.csv`
+
+This file is the same as `application_test.csv` except that it features the target variable.
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+app_train_df = (
+    duckdb                                                 # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/application_train.csv'")     # Read the file
+    .fetchdf()                                             # Convert to a pandas dataframe
+)
+
+skim(app_train_df)                                         # "Skim" the data set
+
+```
