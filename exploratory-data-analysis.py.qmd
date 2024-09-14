@@ -175,16 +175,7 @@ We'll start off by getting familiar with each of the data sets. We'll use the `{
 
 ### `application_train.csv`
 
-This file is the same as `application_test.csv` except that it features the target variable. We'll start with the columns:
-
-```{python}
-
-duckdb.sql("""
-    SELECT *
-    FROM 'data/HomeCredit_columns_description.csv'
-""")
-
-```
+This file is the same as `application_test.csv` except that it features the target variable.
 
 ```{python}
 #| class: scrolling-y
@@ -255,7 +246,7 @@ This is a LARGE data set. Let's break down some of the observations we can glean
 
 ### `bureau.csv`
 
-This file is the same as `application_test.csv` except that it features the target variable.
+This file relates to previous credit bureau activity associated with the current loan. Let's digest the data:
 
 ```{python}
 #| class: scrolling-y
@@ -263,11 +254,41 @@ This file is the same as `application_test.csv` except that it features the targ
 from skimpy import skim
 
 app_train_df = (
-    duckdb                                                 # Use DuckDB's query engine
-    .sql("SELECT * FROM 'data/application_train.csv'")     # Read the file
-    .fetchdf()                                             # Convert to a pandas dataframe
+    duckdb                                      # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/bureau.csv'")     # Read the file
+    .fetchdf()                                  # Convert to a pandas dataframe
 )
 
-skim(app_train_df)                                         # "Skim" the data set
+skim(app_train_df)                              # "Skim" the data set
 
 ```
+
+The first thing to notice is the ~1.7M records, compared to the previous file of ~360K. Cearly there will be multiple historical bureau records for each matching application.
+
+#### Data Types
+
+*   All seems to be in fair order
+*   There's opportunity with the 3 `string` variables to cast as a `categorical`
+
+#### Missing Data
+
+*   5 columns are missing data
+    *  `DAYS_CREDIT_ENDDATE` and `DAYS_ENDDATE_FACT` measure days between current application and end date of bureau credit; the end date must just be missing
+    *   `AMT_CREDIT_MAX_OVERDUE` is curiously missing a lot of data; perhaps due to there not having been an overdue balance to report
+    *   `AMT_CREDIT_SUM_DEBT` is understandable if someone had no current debt sums
+    *   `AMT_CREDIT_SUM_LIMIT` is understandably blank should a client not have a credit card
+    *   `AMT_ANNUITY` only those with an annuity loan would have values here
+
+Many of those seem resonable to populate with zeros in a cleaning phase.
+
+
+#### Distribution
+
+*   `DAYS_CREDIT` seem to be the only significantly skewed variable
+
+
+#### Potential feature engineering
+
+*   I'd be curious just how much variability in credit reports per individual could be explained by dimensionality reduction (PCA)
+
+
