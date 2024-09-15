@@ -2810,7 +2810,7 @@ vertical-align: -.125em;
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> duckdb.sql(<span class="st">&quot;SELECT * FROM &#39;data/bureau.csv&#39; LIMIT 10&quot;</span>).fetchdf()</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="5">
+<div class="cell-output cell-output-display" data-execution_count="14">
 <pre><code>pandas.core.frame.DataFrame</code></pre>
 </div>
 </div>
@@ -3378,13 +3378,13 @@ memory usage: 848.0+ bytes</code></pre>
 <section id="distribution-1" class="level4">
 <h4 class="anchored" data-anchor-id="distribution-1">Distribution</h4>
 <ul>
-<li>Lorem ipsum</li>
+<li><code>DAYS_CREDIT</code> seem to be the only significantly skewed variable</li>
 </ul>
 </section>
 <section id="potential-feature-engineering-1" class="level4">
 <h4 class="anchored" data-anchor-id="potential-feature-engineering-1">Potential feature engineering</h4>
 <ul>
-<li>Lorem ipsum</li>
+<li>I’d be curious just how much variability in credit reports per individual could be explained by dimensionality reduction (PCA)</li>
 </ul>
 </section>
 </section>
