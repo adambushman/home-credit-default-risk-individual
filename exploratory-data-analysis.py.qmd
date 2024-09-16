@@ -169,7 +169,9 @@ There really won't be any issue navigating between the different APIs. In fact, 
 
 ## Skim each dataset
 
-We'll start off by getting familiar with each of the data sets. We'll use the `{skimpy}` package for this and do some visualizations.
+We'll start off by getting familiar with each of the data sets. We'll use the `{skimpy}` package for this and do some visualizations. We'll rely on the ERD to help with interpretation:
+
+![](https://storage.googleapis.com/kaggle-media/competitions/home-credit/home_credit.png)
 
 ### `application_train.csv`
 
@@ -290,10 +292,9 @@ Many of those seem resonable to populate with zeros in a cleaning phase.
 *   I'd be curious just how much variability in credit reports per individual could be explained by dimensionality reduction (PCA)
 
 
-
 ### `bureau_balance.csv`
 
-This file relates to previous credit bureau activity associated with the current loan. It appears to summarize the client. Let's digest the data:
+>   Monthly balance of credits in Credit Bureau
 
 ```{python}
 #| class: scrolling-y
@@ -330,5 +331,50 @@ No missing data
 #### Potential feature engineering
 
 No immediate thoughts.
+
+
+### `POS_CASH_balance.csv`
+
+>   Monthly balance of client's previous loans in Home Credit
+
+This data will link to the application and to past payment installments. Some clients will have previous loans, even multiple, while other may have none.
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+app_train_df = (
+    duckdb                                              # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/POS_CASH_balance.csv'")     # Read the file
+    .fetchdf()                                          # Convert to a pandas dataframe
+)
+
+skim(app_train_df)                                      # "Skim" the data set
+
+```
+
+This file has ~1.0M records. Understandably, there's more records than applications due to monthly summaries and some customers having multiple previous loans.
+
+#### Data Types
+
+*   We've got two ID columns that aren't really continuous: `SK_ID_PREV` and `SK_ID_CURR`
+*   There's opportunity the `NAME_CONTRACT_STATUS` variable to cast as a `categorical`
+
+#### Missing Data
+
+*   `CNT_INSTALLMENT` and `CNT_INSTALLMENT_FUTURE` are mostly complete. Where there exist missing values, it means there's nothing outstanding in previous loans.
+
+
+#### Distribution
+
+*   `MONTHS_BLANCE` seems to be skewed to the right
+
+
+#### Potential feature engineering
+
+*   It's possible this dataset can be represented in 2 variables:
+    *   Existence of previous loan: boolean
+    *   Median oustanding balance: numeric
 
 
