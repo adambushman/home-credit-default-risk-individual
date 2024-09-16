@@ -111,8 +111,6 @@ duckdb.read_csv("data/installments_payments.csv")
 duckdb.read_csv("data/POS_CASH_balance.csv")
 duckdb.read_csv("data/previous_application.csv")
 
-duckdb.read_csv("data/HomeCredit_columns_description.csv")
-
 ```
 
 This approach isn't what you'd call "conventional". How are we expecting to work with this data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
@@ -290,5 +288,47 @@ Many of those seem resonable to populate with zeros in a cleaning phase.
 #### Potential feature engineering
 
 *   I'd be curious just how much variability in credit reports per individual could be explained by dimensionality reduction (PCA)
+
+
+
+### `bureau_balance.csv`
+
+This file relates to previous credit bureau activity associated with the current loan. It appears to summarize the client. Let's digest the data:
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+app_train_df = (
+    duckdb                                              # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/bureau_balance.csv'")     # Read the file
+    .fetchdf()                                          # Convert to a pandas dataframe
+)
+
+skim(app_train_df)                                      # "Skim" the data set
+
+```
+
+The first thing I'm seeing is ~27.2M records, compared to the previous file of ~1.7M. At this moment, I'm not clear how to interpret many balances per client/loan. 
+
+#### Data Types
+
+*   All seems to be in fair order
+*   There's opportunity the `status` variable to cast as a `categorical`
+
+#### Missing Data
+
+No missing data
+
+
+#### Distribution
+
+*   `MONTHS_BLANCE` seems to be skewed to the right
+
+
+#### Potential feature engineering
+
+No immediate thoughts.
 
 
