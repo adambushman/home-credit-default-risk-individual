@@ -175,6 +175,8 @@ We'll start off by getting familiar with each of the data sets. We'll use the `{
 
 ### `application_train.csv`
 
+>   Main tables - out train and test samples; target (binary); info about loan and loan applicant at application time.
+
 This file is the same as `application_test.csv` except that it features the target variable.
 
 ```{python}
@@ -246,7 +248,9 @@ This is a LARGE data set. Let's break down some of the observations we can glean
 
 ### `bureau.csv`
 
-This file relates to previous credit bureau activity associated with the current loan. Let's digest the data:
+>   Application data from previous loans that client got from other institutions that were reported to the Credit Bureau. One row per client's loan in Credit Bureau
+
+This file will tell us all about the previous loans any credit history client would have. Let's digest the data:
 
 ```{python}
 #| class: scrolling-y
@@ -296,6 +300,8 @@ Many of those seem resonable to populate with zeros in a cleaning phase.
 
 >   Monthly balance of credits in Credit Bureau
 
+Essentially, we have an expanded version of balances per client loan reported to the bureau.
+
 ```{python}
 #| class: scrolling-y
 
@@ -311,7 +317,7 @@ skim(app_train_df)                                      # "Skim" the data set
 
 ```
 
-The first thing I'm seeing is ~27.2M records, compared to the previous file of ~1.7M. At this moment, I'm not clear how to interpret many balances per client/loan. 
+The first thing I'm seeing is ~27.2M records. Multiple monthly balances per loan.
 
 #### Data Types
 
@@ -330,7 +336,10 @@ No missing data
 
 #### Potential feature engineering
 
-No immediate thoughts.
+*   It's possible this dataset can be represented in 2 variables:
+    *   Existence of previous loan: boolean
+    *   Median oustanding balance: numeric
+
 
 
 ### `POS_CASH_balance.csv`
