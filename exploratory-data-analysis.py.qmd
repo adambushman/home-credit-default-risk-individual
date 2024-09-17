@@ -342,6 +342,64 @@ No missing data
 
 
 
+### `previous_application.csv`
+
+>   Application data of client's previous loans in Home Credit. Info about the previous loan parameters and client info at time of previous application. One row per previous application.
+
+This file details previous applications with Home Credit. Some clients may have never applied for loans previously while others could have had multiple applications.
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+app_train_df = (
+    duckdb                                              # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/previous_application.csv'")     # Read the file
+    .fetchdf()                                          # Convert to a pandas dataframe
+)
+
+skim(app_train_df)                                      # "Skim" the data set
+
+```
+
+This file has ~1.0M records. Understandably, there's more records than applications due to monthly summaries and some customers having multiple previous loans.
+
+#### Data Types
+
+*   A few variables are mapped as continuous but need to be moved to discrete (possibly categorical)
+    *   `SELLERPLACE_AREA`, `NFLAG_INSURED_ON_APPROVAL`, `NFLAG_MICRO_CASH`, `NFLAG_LAST_APPL_IN_DAY`, `FLAG_LAST_APPL_PER_CONTRACT`
+*   A few variables mapped as `string` may be better suited as categorical
+    *   `NAME_CONTRACT_TYPE`, `NAME_CONTRACT_STATUS`, `NAME_PAYMENT_TYPE`, `NAME_CLIENT_TYPE`, `NAME_GOODS_CATEGORY`, etc.
+
+#### Missing Data
+
+*   There are several missing data points
+    *   `AMT_ANNUITY` refers to the previous application; if there was none or its balance is zero, makes sense to be missing
+    *   `AMT_DOWN_PAYMENT` would be zero if there was none made
+    *   `RATE_DOWN_PAYMENT` how much was put down relative to the loan (see above)
+    *   `RATE_INTEREST_PRIMARY` & `RATE_INTEREST_PRIVILEGED`; since this is applicationss, it could be there was previous credit
+        *   A high rate of missing data (99%)
+    *   `CNT_PAYMENT` how far into a previous loan for the current one
+    *   `DAYS_FIRST_*` refers to the first dispersement, due amount, etc; if no loan was approved, makes sense to be blank
+    *   `NAME_TYPE_SUITE` is the only discrete field with high NAs (49%); it indicates who accompanied the client in for the application
+
+
+#### Distribution
+
+*   Only two right-skewed data points I can see
+    *   `DAYS_DECISION` and `RATE_INTEREST_PRIVILEGED` (virtually no data on this one)
+
+
+#### Potential feature engineering
+
+*  Ultimately this will need to be aggregated; ways to represent the data?
+    *   Count of previous applications
+    *   Status/reject rates
+    *   Classify goods, maybe (% reasonable)
+
+
+
 ### `POS_CASH_balance.csv`
 
 >   Monthly balance of client's previous loans in Home Credit
@@ -385,5 +443,4 @@ This file has ~1.0M records. Understandably, there's more records than applicati
 *   It's possible this dataset can be represented in 2 variables:
     *   Existence of previous loan: boolean
     *   Median oustanding balance: numeric
-
 
