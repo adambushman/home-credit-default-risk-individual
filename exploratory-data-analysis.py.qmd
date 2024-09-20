@@ -113,7 +113,9 @@ duckdb.read_csv("data/previous_application.csv")
 
 ```
 
-This approach isn't what you'd call "conventional". How are we expecting to work with These data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
+This approach isn't what you'd call "conventional". However, DuckDB is uniquely suited for this type of workload. We have multiple files with millions of records each. DuckDb is more performant over [other Python ecosystem libraries](https://github.com/prrao87/duckdb-study) and [packages in the R ecosystem](https://adrian-cidre.com/posts/012_benchmarking/).
+
+Okay, so it's well suited to the problem, but how are we expecting to work with these data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
 
 
 ## Working With the Data
@@ -552,7 +554,7 @@ bureau_history = (
         ) 
         SELECT 
         bureau_history_cnt
-        ,COUNT(app_id) AS app_cnt
+        ,COUNT(*) AS app_cnt
 
         FROM STEP1
 
@@ -562,7 +564,7 @@ bureau_history = (
     """).fetchdf()
 )
 
-bureau_history
+bureau_history.head()
 
 ```
 
@@ -574,8 +576,125 @@ What we've done here is isolate the number of applications for which there is no
 
 ```{python}
 
-bureau_history.describe()       # Get summary statistics
+(bureau_history                                                                     # Take the history aggregated
+    .assign(
+        app_freq = lambda df: df['app_cnt'] / sum(df['app_cnt']),                   # Calculate the percent frequency
+        adj_history_cnt = lambda df: df['app_freq'] * df['bureau_history_cnt']      # Calculate adjusted count of history
+    )
+    ['adj_history_cnt']                                                             # Select the new variable
+    .sum()                                                                          # Get the total (our new average)
+)
 
 ```
 
-Here we learn that the bottom quartile of applications have 15 or fewer historicaly credit bureau records. This, we'd probably say, is the definition of insufficient credit history. 
+Here we learn that the average number of historical credit bureau records is `<= 5`. This is the average, so insufficien history is far more likely to be fewer than 3 (`< 3`) records of history. This, we'd probably say, is the definition of insufficient credit history. 
+
+### Supplemental History
+
+Now that we've identified the underserved population this project cares about, let's see if we can't confirm there exists other data points that could help assess credit worthiness. 
+
+In theory, Home Credit has previous application data on these individuals that may contribute. Let's expand on the query above to see:
+
+```{python}
+
+supplement_history = (
+    duckdb.sql("""
+        WITH 
+        STEP1 AS (
+            SELECT 
+            at.SK_ID_CURR
+            ,COUNT(b.SK_ID_CURR) AS bureau_history_cnt
+
+            FROM 'data/application_train.csv' at
+            LEFT JOIN 'data/bureau.csv' b ON b.SK_ID_CURR = at.SK_ID_CURR
+
+            GROUP BY ALL
+        ) 
+        ,STEP2 AS (
+            SELECT 
+            s.SK_ID_CURR AS ap_id
+            ,COUNT(pa.SK_ID_PREV) AS prev_app_history_cnt
+
+            FROM STEP1 s
+            LEFT JOIN 'data/previous_application.csv' pa ON pa.SK_ID_CURR = s.SK_ID_CURR
+
+            WHERE 1 = 1
+            AND bureau_history_cnt <= 5 -- Insufficient credit history
+
+            GROUP BY ALL
+        )
+        SELECT
+        prev_app_history_cnt
+        ,COUNT(*) AS app_cnt
+
+        FROM STEP2
+
+        GROUP BY ALL
+
+        ORDER BY prev_app_history_cnt
+    """).fetchdf()
+)
+
+supplement_history.head()
+
+```
+
+Despite most of this underserved population haing some previous application data with Home Credit we could use to supplement insufficient credit bureau, there's at least 16,237 original applications without any previous history with Home Credit.
+
+```{python}
+
+(supplement_history                                                                         # Take the history aggregated
+    .assign(
+        app_freq = lambda df: df['app_cnt'] / sum(df['app_cnt']),                       # Calculate the percent frequency
+        adj_history_cnt = lambda df: df['app_freq'] * df['prev_app_history_cnt']        # Calculate adjusted count of history
+    )
+    ['adj_history_cnt']                                                                 # Select the new variable
+    .sum()                                                                              # Get the total (our new average)
+)
+
+```
+
+Again, we see the average number of previous application history with Home Credit to be `<= 5`. We'll assume the same rule from above (`< 3`) for the "insufficient" group.
+
+
+### Insufficient History Options
+
+We've established a group that has insufficient history from both the credit bureau and historical Home Credit records. The next step is to re-analyze the `application_train.csv` file only for this group. Any model we design has to be inclusive to this group and leverage what data exists therein.
+
+Here, we're restricting the data to our "insufficient" group and we'll `skim` again:
+
+```{python}
+
+insufficient_history = (
+    duckdb.sql("""
+        WITH 
+        STEP1 AS (
+            SELECT 
+            at.SK_ID_CURR
+            ,COUNT(DISTINCT b.SK_ID_BUREAU) AS bureau_history_cnt
+            ,COUNT(DISTINCT pa.SK_ID_PREV) AS hc_history_cnt
+
+            FROM 'data/application_train.csv' at
+            LEFT JOIN 'data/bureau.csv' b ON b.SK_ID_CURR = at.SK_ID_CURR
+            LEFT JOIN 'data/previous_application.csv' pa ON pa.SK_ID_CURR = at.SK_ID_CURR
+
+            GROUP BY
+            at.SK_ID_CURR
+        )
+        SELECT
+        at.*
+
+        FROM 'data/application_train.csv' at
+        INNER JOIN STEP1 ON STEP1.SK_ID_CURR = at.SK_ID_CURR
+
+        WHERE bureau_history_cnt < 3
+        AND hc_history_cnt < 3
+    """).fetchdf()
+)
+
+skim(insufficient_history)
+
+```
+
+This leaves us with 51,288 applications in the "insufficient history" category. This means we're left with the columns on the `application_train.csv` file as the best souce for predicting default. Let's get some quick observations on this subset of applications:
+
