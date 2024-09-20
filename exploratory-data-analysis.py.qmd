@@ -411,13 +411,13 @@ These data will link to the current application and to past applications. Some c
 
 from skimpy import skim
 
-app_train_df = (
+installment_pmt_df = (
     duckdb                                                      # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/installments_payments.csv'")      # Read the file
     .fetchdf()                                                  # Convert to a pandas dataframe
 )
 
-skim(app_train_df)                                              # "Skim" the data set
+skim(installment_pmt_df)                                        # "Skim" the data set
 
 ```
 
@@ -455,13 +455,13 @@ These data will link to the application and to past payment installments. Some c
 
 from skimpy import skim
 
-app_train_df = (
+cash_bal_df = (
     duckdb                                              # Use DuckDB's query engine
-    .sql("SELECT * FROM 'data/POS_CASH_balance.csv'")     # Read the file
+    .sql("SELECT * FROM 'data/POS_CASH_balance.csv'")   # Read the file
     .fetchdf()                                          # Convert to a pandas dataframe
 )
 
-skim(app_train_df)                                      # "Skim" the data set
+skim(cash_bal_df)                                       # "Skim" the data set
 
 ```
 
@@ -488,3 +488,52 @@ This file has ~1.0M records. Understandably, there's more records than applicati
     *   Existence of previous loan: boolean
     *   Median oustanding balance: numeric
 
+
+
+### `credit_card_balance.csv`
+
+>   Monthly balance of client's previous credit card loans in Home Credit
+
+These data are all about credit card loans with Home Credit, specifically the balance that is carried.
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+credit_card_df = (
+    duckdb                                                  # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/credit_card_balance.csv'")    # Read the file
+    .fetchdf()                                              # Convert to a pandas dataframe
+)
+
+skim(credit_card_df)                                        # "Skim" the data set
+
+```
+
+This file has ~3.8M records. 
+
+#### Data Types
+
+*   We've got two ID columns that aren't really continuous: `SK_ID_PREV` and `SK_ID_CURR`
+*   There's opportunity the `NAME_CONTRACT_STATUS` variable to cast as a `categorical`
+
+#### Missing Data
+
+*   There are several "count" variables with missing date (~20% missing)
+    *   `CNT_INSTALLMENT_MATURE_CUM`, `CNT_DRAWINGS_POS_CURRENT`, `CNT_DRAWINGS_OTHER_CURRENT`, `CNT_DRAWINGS_ATM_CURRENT`
+    *   I assume much of these are missing given there were now withdrawals for the categories
+*   Some "amount" variables corresponding to the same categories above missing similar amounts of data
+
+
+#### Distribution
+
+*   `CNT_INSTALLMENT_MATURE_CUM` is very left skewed (understandable with a cumulative measure)
+*   `MONTHS_BALANCE` is right skewed
+
+
+#### Potential feature engineering
+
+*   It's possible this dataset can be represented in 2 variables:
+    *   Withdrawal amounts relative to limit
+    *   Withdrawal counts
