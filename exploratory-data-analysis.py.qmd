@@ -255,8 +255,6 @@ This file will tell us all about the previous loans any credit history client wo
 ```{python}
 #| class: scrolling-y
 
-from skimpy import skim
-
 bureau_df = (
     duckdb                                      # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/bureau.csv'")     # Read the file
@@ -305,8 +303,6 @@ Essentially, we have an expanded version of balances per client loan reported to
 ```{python}
 #| class: scrolling-y
 
-from skimpy import skim
-
 bureau_bal_df = (
     duckdb                                              # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/bureau_balance.csv'")     # Read the file
@@ -350,8 +346,6 @@ This file details previous applications with Home Credit. Some clients may have 
 
 ```{python}
 #| class: scrolling-y
-
-from skimpy import skim
 
 prev_app_df = (
     duckdb                                                      # Use DuckDB's query engine
@@ -409,8 +403,6 @@ These data will link to the current application and to past applications. Some c
 ```{python}
 #| class: scrolling-y
 
-from skimpy import skim
-
 installment_pmt_df = (
     duckdb                                                      # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/installments_payments.csv'")      # Read the file
@@ -452,8 +444,6 @@ These data will link to the application and to past payment installments. Some c
 
 ```{python}
 #| class: scrolling-y
-
-from skimpy import skim
 
 cash_bal_df = (
     duckdb                                              # Use DuckDB's query engine
@@ -499,8 +489,6 @@ These data are all about credit card loans with Home Credit, specifically the ba
 ```{python}
 #| class: scrolling-y
 
-from skimpy import skim
-
 credit_card_df = (
     duckdb                                                  # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/credit_card_balance.csv'")    # Read the file
@@ -537,3 +525,57 @@ This file has ~3.8M records.
 *   It's possible this dataset can be represented in 2 variables:
     *   Withdrawal amounts relative to limit
     *   Withdrawal counts
+
+
+## Dataset Joins
+
+With a fair understanding of the files we're working with, let's explore the central idea to the project: Home Credit wants to improve inclusivity of an underserved population. This group is generally without sufficient (or any) credit history. Let's see if we can identify those applications via joining the datasets.
+
+### No Credit Bureau History
+
+For this look, we need to join `application_train.csv` and `bureau.csv`. We'll then aggregate to find out the distribution of credit history among Home Credit clients.
+
+```{python}
+
+bureau_history = (
+    duckdb.sql("""
+        WITH 
+        STEP1 AS (
+            SELECT 
+            at.SK_ID_CURR AS app_id
+            ,COUNT(b.SK_ID_CURR) AS bureau_history_cnt
+
+            FROM 'data/application_train.csv' at
+            LEFT JOIN 'data/bureau.csv' b ON b.SK_ID_CURR = at.SK_ID_CURR
+
+            GROUP BY ALL
+        ) 
+        SELECT 
+        bureau_history_cnt
+        ,COUNT(app_id) AS app_cnt
+
+        FROM STEP1
+
+        GROUP BY ALL
+
+        ORDER BY bureau_history_cnt
+    """).fetchdf()
+)
+
+bureau_history
+
+```
+
+::: {.callout-note}
+I mentioned previously that `DuckDB` has tremendous syntax and we get our first glimpse in the above code block. Instead of needing to mirror the non-aggregated column names from the `SELECT` clause down to the `GROUP BY` clause, using `GROUP BY ALL` will perform this step for us ([documentation](https://duckdb.org/docs/sql/query_syntax/groupby)). Glorious!
+:::
+
+What we've done here is isolate the number of applications for which there is no history with the credit credit bureau (44,020 applications). Additionally, there are those with little credit history. How much is little? Let's generate a summary to get a more true sense of distribution (we know it's left-skewed) with the `describe()` method of a Pandas dataframe:
+
+```{python}
+
+bureau_history.describe()       # Get summary statistics
+
+```
+
+Here we learn that the bottom quartile of applications have 15 or fewer historicaly credit bureau records. This, we'd probably say, is the definition of insufficient credit history. 
