@@ -113,7 +113,7 @@ duckdb.read_csv("data/previous_application.csv")
 
 ```
 
-This approach isn't what you'd call "conventional". How are we expecting to work with this data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
+This approach isn't what you'd call "conventional". How are we expecting to work with These data? We'll walk through some use cases quickly to demonstrate how seamless it will actually be.
 
 
 ## Working With the Data
@@ -221,7 +221,7 @@ This is a LARGE data set. Let's break down some of the observations we can glean
     *   This is a count that's heavily skewed to the right
     *   <1% of observations have these fields as missing
 *   `AMT_REQ_CREDIT_BUREAU_XX` are fields measure the number of credit inqueries in XX timeframe
-    *   This data set is geared around users without sufficient credit history so makes sense this is missing
+    *   These data set is geared around users without sufficient credit history so makes sense this is missing
     *   ~13% of the data is missing
 *   `OCCUPATION_TYPE` refers to the type of job the user has
     *   Missing for virtually 1/3 clients
@@ -257,13 +257,13 @@ This file will tell us all about the previous loans any credit history client wo
 
 from skimpy import skim
 
-app_train_df = (
+bureau_df = (
     duckdb                                      # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/bureau.csv'")     # Read the file
     .fetchdf()                                  # Convert to a pandas dataframe
 )
 
-skim(app_train_df)                              # "Skim" the data set
+skim(bureau_df)                                 # "Skim" the data set
 
 ```
 
@@ -307,13 +307,13 @@ Essentially, we have an expanded version of balances per client loan reported to
 
 from skimpy import skim
 
-app_train_df = (
+bureau_bal_df = (
     duckdb                                              # Use DuckDB's query engine
     .sql("SELECT * FROM 'data/bureau_balance.csv'")     # Read the file
     .fetchdf()                                          # Convert to a pandas dataframe
 )
 
-skim(app_train_df)                                      # "Skim" the data set
+skim(bureau_bal_df)                                     # "Skim" the data set
 
 ```
 
@@ -353,13 +353,13 @@ This file details previous applications with Home Credit. Some clients may have 
 
 from skimpy import skim
 
-app_train_df = (
-    duckdb                                              # Use DuckDB's query engine
-    .sql("SELECT * FROM 'data/previous_application.csv'")     # Read the file
-    .fetchdf()                                          # Convert to a pandas dataframe
+prev_app_df = (
+    duckdb                                                      # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/previous_application.csv'")       # Read the file
+    .fetchdf()                                                  # Convert to a pandas dataframe
 )
 
-skim(app_train_df)                                      # "Skim" the data set
+skim(prev_app_df)                                               # "Skim" the data set
 
 ```
 
@@ -400,11 +400,55 @@ This file has ~1.0M records. Understandably, there's more records than applicati
 
 
 
+### `installments_payments.csv`
+
+>   Past payment data for each installments of previous credits in Home Credit related to loans in our sample.
+
+These data will link to the current application and to past applications. Some clients will have previous loans, even multiple, while others may have none. We can see payments due and made in this file.
+
+```{python}
+#| class: scrolling-y
+
+from skimpy import skim
+
+app_train_df = (
+    duckdb                                                      # Use DuckDB's query engine
+    .sql("SELECT * FROM 'data/installments_payments.csv'")      # Read the file
+    .fetchdf()                                                  # Convert to a pandas dataframe
+)
+
+skim(app_train_df)                                              # "Skim" the data set
+
+```
+
+This file has ~1.4M records. 
+
+#### Data Types
+
+*   We've got two ID columns that aren't really continuous: `SK_ID_PREV` and `SK_ID_CURR`
+*   All other variable data types look fine
+
+#### Missing Data
+
+*   `DAYS_ENTR_PAYMENT` and `AMT_PAYMENT` are mostly complete. The few missing values must be unpaid amounts, may due to default but perhaps due to the cutoff date
+
+
+#### Distribution
+
+*   `DAYS_INSTALMENT` seems to be skewed to the right
+
+
+#### Potential feature engineering
+
+*   We could probably synthesize this down to the installment payment timing
+
+
+
 ### `POS_CASH_balance.csv`
 
 >   Monthly balance of client's previous loans in Home Credit
 
-This data will link to the application and to past payment installments. Some clients will have previous loans, even multiple, while other may have none.
+These data will link to the application and to past payment installments. Some clients will have previous loans, even multiple, while other may have none.
 
 ```{python}
 #| class: scrolling-y
