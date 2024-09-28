@@ -643,7 +643,7 @@ Despite most of this underserved population haing some previous application data
 
 ```{python}
 
-(supplement_history                                                                         # Take the history aggregated
+(supplement_history                                                                     # Take the history aggregated
     .assign(
         app_freq = lambda df: df['app_cnt'] / sum(df['app_cnt']),                       # Calculate the percent frequency
         adj_history_cnt = lambda df: df['app_freq'] * df['prev_app_history_cnt']        # Calculate adjusted count of history
@@ -705,3 +705,69 @@ This leaves us with 51,288 applications in the "insufficient history" category. 
 *   Mean income and variance thereof is lower in this sample versus the entire `application_train.csv` file, while credit amount and other measures are fairly consistent
     *   I'm getting the impression that these applications are, in fact, very similar to the population
     *   As the prompt said originally, due to insufficient credit history, these often falling victim to overly punitive terms by lenders
+
+
+## Underserved Applications
+
+The crux of this problem is to improve the borrowing experience for this underserved group of applications. Therefore, if we find a pretty good model for this group, we're likely to be creating a good model overall. Let's dive into some predictive exploration for this group.
+
+### Documents
+
+There's approximately 20 `FLAG_DOCUMENT_#` features in the dataset. Let's see if these are even valuable to us. For that, we'll reduce to its principal components and then make a simple model.
+
+We'll load the libraries necessary for PCA:
+
+```{python}
+
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+```
+
+Now let's first get our data in the right format. We want 1) all of the `FLAG_DOCUMENT_#` columns in one dataframe and 2) `TARGET` in its own.
+
+```{python}
+
+app_docs = insufficient_history.filter(like='FLAG_DOCUMENT_')       # Extract all FLAG_DOCUMENT variables
+app_docs_scaled = StandardScaler().fit_transform(app_docs)          # Standardize each column
+app_target = insufficient_history[['TARGET']]                       # Get the target variable
+
+```
+
+Now we can reduce these 20 variables to its principal components. Hopefully, a small fraction of those will explain 80-90% of the variance. This would allow us to use fewer variables in a test model. Either way, we'll then be able to run a simple model to see how predictive these are. 
+
+```{python}
+
+import random
+random.seed(814)
+
+pca = PCA(n_components=app_docs_scaled.shape[1])        # Define the PCA
+app_docs_pca = pca.fit_transform(app_docs_scaled)       # Run the PCA
+
+exp_var = pca.explained_variance_ratio_                 # Get the explained variance for each principal component
+
+print(exp_var[0:4])                                     # How much variance is explained by the first 5 components 
+
+```
+
+These first 5 components are only explaining about 1/3 of the variance. PCA isn't helping us reduce the volume of variables. Instead, let's just run a simple, logistic regression model with all these predictors modeling `TARGET`. I really like the `statsmodels` package as it facilitates very similar model summaries to R, which is huge for interpretability.
+
+```{python}
+
+import statsmodels.api as sm
+
+app_docs_mod = sm.Logit(app_target, app_docs_pca).fit()     # Fit a logistic regression
+
+print(app_docs_mod.summary())                               # Print the model summary
+
+```
+
+Clearly, this is a very bad model. We've got a negative $R^2$ and only two of the components are even statistically significant (x1 and x18). We could sum the PCA explained variance from above for those features:
+
+```{python}
+
+exp_var[0] + exp_var[17]        # Explained variance by the only two components that were statistically significant
+
+```
+
+Only 10% of the variance is being explained by these statistically significant components. These won't be helpful in predicting our target variable.
