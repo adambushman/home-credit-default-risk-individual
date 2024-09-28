@@ -664,6 +664,7 @@ We've established a group that has insufficient history from both the credit bur
 Here, we're restricting the data to our "insufficient" group and we'll `skim` again:
 
 ```{python}
+#| class: scrolling-y
 
 insufficient_history = (
     duckdb.sql("""
@@ -698,3 +699,9 @@ skim(insufficient_history)
 
 This leaves us with 51,288 applications in the "insufficient history" category. This means we're left with the columns on the `application_train.csv` file as the best souce for predicting default. Let's get some quick observations on this subset of applications:
 
+*   Just as before, most items relating to a dwelling have a high rate of missing data
+    *   I'm curious to see if these data points are even helpful or not
+    *   There's approximately 43 dwelling related predictors; if we take these and reduce to its principal components, we can test if there's anything of predictive value in here 
+*   Mean income and variance thereof is lower in this sample versus the entire `application_train.csv` file, while credit amount and other measures are fairly consistent
+    *   I'm getting the impression that these applications are, in fact, very similar to the population
+    *   As the prompt said originally, due to insufficient credit history, these often falling victim to overly punitive terms by lenders
