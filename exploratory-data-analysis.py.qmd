@@ -800,11 +800,62 @@ app_docs_pca = pca.fit_transform(app_dwell)             # Run the PCA
 
 dwell_exp_var = pca.explained_variance_ratio_           # Get the explained variance for each principal component
 
-print(dwell_exp_var[0:4])                               # How much variance is explained by the first 5 components 
+print(dwell_exp_var[0:5])                               # How much variance is explained by the first 5 components 
 
 ```
 
-Okay! The PCA is helping quite a bit here. We've got 84% of the variance explained in the first 5 components. That's great info! For now, however, let's use the original variables in a logistic regression model (I'm curious which, if any, are predictive of `TARGET`).
+Okay! The PCA is helping quite a bit here. We've got 87% of the variance explained in the first 5 components. That's great info! 
+
+This would be a great time for a visualization and showing off the power of `plotnine`, a grammar of graphics visualization package by the same folks who designed `ggplot2` for R. Let's visualize the proportion of variance captured by each principal component.
+
+First, we need to make a dataframe with the principal components we have in a list above.
+
+```{python}
+
+dwell_pca_df = (
+    pd.DataFrame({
+        "component": list(map(lambda x: f'x{x}', range(1, 15))), 
+        "variance": dwell_exp_var
+    })
+    .assign(variance_fmt = lambda df: df["variance"].map(lambda x: f'{x * 100:.1f}%'))
+    .sort_values("variance", ascending = False)
+    .reset_index(drop = True)
+)
+
+component_list = dwell_pca_df["component"]
+component_cat = pd.Categorical(dwell_pca_df["component"], categories = component_list)
+dwell_pca_df = dwell_pca_df.assign(component = component_cat)
+
+dwell_pca_df
+
+```
+
+```{python}
+
+from plotnine import ggplot, geom_col, geom_text, aes, labs, theme_minimal, theme, element_blank, element_text
+
+(
+    ggplot(dwell_pca_df, aes("component", "variance", label = "variance_fmt"))
+    + geom_col(fill = "#BE0000")
+    + geom_text(va = "bottom")
+    + labs(
+        title = "Proportion of variance by principal component", 
+        subtitle = "Dwelling related variables", 
+        x = "Component"
+    )
+    + theme_minimal()
+    + theme(
+        panel_grid_major_x = element_blank(), 
+        panel_grid_major_y = element_blank(), 
+        axis_title_y = element_blank(), 
+        axis_title_x = element_text(margin = {"t": 10,"r": 0,"b": 0,"l": 0,"units": "pt"}), 
+        axis_text_y = element_blank()
+    )
+)
+
+```
+
+Instead of using the principal components as the predictors, let's use the original variables in a logistic regression model (I'm curious which, if any, are predictive of `TARGET`).
 
 ```{python}
 
