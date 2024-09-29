@@ -770,4 +770,50 @@ exp_var[0] + exp_var[17]        # Explained variance by the only two components 
 
 ```
 
-Only 10% of the variance is being explained by these statistically significant components. These won't be helpful in predicting our target variable.
+Only 10% of the variance is being explained by these statistically significant components. As is, these won't be helpful in predicting our target variable. It's possible a simple field indicating the count of documents submitted is somewhat helpful. But we'll look at that later.
+
+
+### Dwelling
+
+Let's use a similar exercise on the variables related to dwelling. We have several versions with different measures of central tendency (average, median, and mode). Let's go with the median versions. We know there's a lot of missing values. Let's get rid of those while we explore the predictive power of these variables.
+
+```{python}
+
+app_dwell = insufficient_history.filter(like='_MEDI')       # Extract all the "median" variables related to dwelling
+missing_idx = app_dwell.isnull().any(axis=1)                # Get index for missing values
+
+app_dwell = app_dwell.loc[-missing_idx,:]                 # Remove missing rows from the dwelling variables
+app_target_dwell = app_target.loc[-missing_idx,:]         # Remove missing rows from the target
+
+app_dwell.shape
+
+```
+
+We're left with 14 columns and no missing values. We don't need to normalize these values since they came to us already scaled. If this complete version of dwelling variables isn't decently predictive of `TARGET`, there's no good argument for including these in some way in a larger model.
+
+Let's see if these can be consolidated with PCA.
+
+```{python}
+
+pca = PCA(n_components=app_dwell.shape[1])              # Define the PCA
+app_docs_pca = pca.fit_transform(app_dwell)             # Run the PCA
+
+dwell_exp_var = pca.explained_variance_ratio_           # Get the explained variance for each principal component
+
+print(dwell_exp_var[0:4])                               # How much variance is explained by the first 5 components 
+
+```
+
+Okay! The PCA is helping quite a bit here. We've got 84% of the variance explained in the first 5 components. That's great info! For now, however, let's use the original variables in a logistic regression model (I'm curious which, if any, are predictive of `TARGET`).
+
+```{python}
+
+app_dwell_mod = sm.Logit(app_target_dwell, app_dwell).fit()        # Fit a logistic regression
+
+print(app_dwell_mod.summary())                                     # Print the model summary
+
+```
+
+Well, at first blush, none of these variables, with exception of `FLOORSMAX_MEDI` and `BASEMENTAREA_MEDI`, are any good. The $R^2$ value is poor and most every variable has too high of a p-value. If you remember, 40-71% of these dwelling variables were missing anyway. It's probably best to exclude these entirely from future models. 
+
+It is possible, however, that a simple field for flagging what % of dwelling data is available would be insightful. We'll look into that later.
