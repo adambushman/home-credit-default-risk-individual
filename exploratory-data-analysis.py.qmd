@@ -988,3 +988,66 @@ Predictably, given the sample size, these are all statistically significant prop
 
 The most interesting, and likely predictive, is `NAME_INCOME_TYPE`. Naturally, one's propensity to default on a loan is often tied to their funds flow. Still, values like `Student` never defaulting is fascinating.
 
+`ORGANIZATION_TYPE` is fascinating. There's a lot of of values here which isn't ideal for a model. Looking at the values, there's clearly some that are similar and others that aren't. Could be a good opportunity for a clustering algorithm.
+
+
+### Clustering organizations
+
+Let's first prepare the data. Let's generate two features for each category:
+
+*   Proportion of observations mapped to default (`TARGET` value of `1`)
+*   Number of observatiosn total
+
+That should be a decent input to a simple algorithm like Nearest Neighbors.
+
+```{python}
+
+org_summary = duckdb.sql("""
+    SELECT 
+    ORGANIZATION_TYPE
+    ,SUM(TARGET) / COUNT(*) AS PROP_DEFAULT
+    ,COUNT(*) AS TOTAL_OBS
+    FROM app_train_df
+    GROUP BY
+    ORGANIZATION_TYPE
+""").fetchdf()
+
+org_summary.head()
+
+```
+
+Let's now construct the nearest neighbors algorithm and apply it to these measures.
+
+```{python}
+
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.neighbors import kneighbors_graph
+
+org_X = org_summary.loc[:,["PROP_DEFAULT", "TOTAL_OBS"]].to_numpy()
+knn_graph = kneighbors_graph(org_X, 5, include_self=False)
+
+agg_clustering = AgglomerativeClustering(n_clusters=5, connectivity=knn_graph)
+org_Labels = agg_clustering.fit_predict(org_X)
+
+org_Labels
+
+```
+
+With the clustering complete, we can now take these labels, add them back into the organization summary and get a sense for which types of organizations are similar.
+
+```{python}
+
+org_summary["ORG_CLASS"] = org_Labels
+
+duckdb.sql("""
+    SELECT
+    ORG_CLASS
+    ,STRING_AGG(ORGANIZATION_TYPE, ',') AS ORG_TYPES
+    FROM org_summary
+    GROUP BY
+    ORG_CLASS
+""").show()
+
+```
+
+Looking at these results, there isn't a ideal binning of these types, but we are seeing some benefit. This would be a far better predictor that the original `ORGANIZATION_TYPE`.
