@@ -865,7 +865,7 @@ print(app_dwell_mod.summary())                                     # Print the m
 
 ```
 
-Well, at first blush, none of these variables, with exception of `FLOORSMAX_MEDI` and `BASEMENTAREA_MEDI`, are any good. The $R^2$ value is poor and most every variable has too high of a p-value. If you remember, 40-71% of these dwelling variables were missing anyway. It's probably best to exclude these entirely from future models. 
+At first blush, none of these variables, with exception of `FLOORSMAX_MEDI` and `BASEMENTAREA_MEDI`, are any good. The $R^2$ value is poor and most every variable has too high of a p-value. If you remember, 40-71% of these dwelling variables were missing anyway. It's probably best to exclude these entirely from future models. 
 
 It is possible, however, that a simple field for flagging what % of dwelling data is available would be insightful. We'll look into that later.
 
@@ -1050,4 +1050,39 @@ duckdb.sql("""
 
 ```
 
-Looking at these results, there isn't a ideal binning of these types, but we are seeing some benefit. This would be a far better predictor that the original `ORGANIZATION_TYPE`.
+Looking at these results, it wasn't an ideal clusting of these types since we still have most types concentrated in two classes. However, mathematically, these are fairly similar in their relationship with `TARGET`. We are seeing some benefit as this would be a far better predictor that the original `ORGANIZATION_TYPE`.
+
+
+# Conclusion
+
+## Summary
+
+There's plenty more to explore with these data sets. As we move on from the exploratory data analysis phase and into modeling, there will continue to be emphasis placed on discovering insights.
+
+At this point, however, we've reached some key milestones:
+
+1.  We have a very thorough understanding of the data
+    *   What fields are available
+    *   How each data set connects to each other
+2.  We've explored who is this cohort of under served applicants
+    *   What does "insufficient" credit history look like
+    *   How many applications meet this definition
+    *   How similar these sample of applications are to the population
+3.  We also began exploration of predictive power
+    *   What fields of the application are likely distractions
+    *   How to reduce the dimensionality of continuous variables
+4.  We also honed in on discrete values and the information they held
+    *   The unique range of values present in categorical variables
+    *   Approaches to clusting discrete variables for dimensionality reduction
+
+
+## Key Insights
+
+Throughout this exploration of the data, a few key insights have surfaced:
+
+1.  Data from past applications and credit bureau history applies to 6 of every 7 applications
+2.  The remainder are those with "insufficient" history, defined as fewer than 3 previous records
+3.  Applicantions with insufficient history are, as a whole, very similar to the population at large
+4.  `DOCUMENT` and `DWELLING` related variables present little to no predictive power for default
+5.  A handful of categorical variables seem like promising candidates for high predictive power
+    *   Namely: `NAME_INCOME_TYPE`, `NAME_EDUCATION_TYPE`, and `ORGANIZATION_TYPE`
