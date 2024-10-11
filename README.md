@@ -8,7 +8,7 @@ Individual repoository predicting home credit default risk, part 1 of the Capsto
 
 A collection of individual work for the Capstone #2 (IS 6812) project, part of the Eccles Business School Masters of Science Business Analytics graduate program.
 
-The project features analytical workflows in data wrangling, data analysis, and data science, leveraged for the purpose of improving the business operations and capabilities. Review our work via in [rendered notebooks](https://adambushman.github.io/home-credit-default-risk-group/).
+The project features analytical workflows in data wrangling, data analysis, and data science, leveraged for the purpose of improving the business operations and capabilities. Review my work in the [rendered notebooks](https://adambushman.github.io/home-credit-default-risk-individual/).
 
 
 ## Capstone 2 Project
