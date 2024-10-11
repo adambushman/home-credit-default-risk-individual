@@ -6,7 +6,7 @@ Individual repoository for home credit default risk, part 1 of the Capstone 2 pr
 
 ## Capstone 2 project for University of Utah MSBA program
 
-Objective for this portion of the capstone is to perform exploratory data analysis (individually) that would inform the second portion (group) that would model default risk.
+Objective for this portion of the capstone is to perform exploratory data analysis (individually) that would inform the second portion (group) that would model default risk. Review my work in the [rendered notebooksl(https://adambushman.github.io/home-credit-default-risk-individual/).
 
 Data set sourced from Kaggle: 
 [Home Credit Default Risk](https://www.kaggle.com/competitions/home-credit-default-risk/data?select=HomeCredit_columns_description.csv).
